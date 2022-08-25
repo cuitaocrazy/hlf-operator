@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/kfsoftware/hlf-operator/api/hlf.kungfusoftware.es/v1alpha1"
+	"github.com/kfsoftware/hlf-operator/controllers/utils"
 	"github.com/kfsoftware/hlf-operator/kubectl-hlf/cmd/helpers"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -83,6 +84,18 @@ func (c *createCmd) run(args []string) error {
 		c.caOpts.Name,
 		fmt.Sprintf("%s.%s", c.caOpts.Name, c.caOpts.NS),
 	}
+
+	clientSet, err := helpers.GetKubeClient()
+	if err != nil {
+		return err
+	}
+
+	ips, err := utils.GetPublicIPsKubernetes(clientSet)
+
+	for _, h := range ips {
+		hosts = append(hosts, h)
+	}
+
 	hosts = append(hosts, c.caOpts.Hosts...)
 	csrHosts := []string{"localhost"}
 	csrHosts = append(csrHosts, c.caOpts.Hosts...)

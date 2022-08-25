@@ -69,7 +69,13 @@ func (c *createCmd) run(args []string) error {
 		"127.0.0.1",
 		"localhost",
 	}
-	csrHosts = append(csrHosts, k8sIP)
+
+	ips, err := utils.GetPublicIPsKubernetes(clientSet)
+
+	for _, h := range ips {
+		csrHosts = append(csrHosts, h)
+	}
+
 	csrHosts = append(csrHosts, c.ordererOpts.Name)
 	csrHosts = append(csrHosts, fmt.Sprintf("%s.%s", c.ordererOpts.Name, c.ordererOpts.NS))
 	ingressGateway := c.ordererOpts.IngressGateway

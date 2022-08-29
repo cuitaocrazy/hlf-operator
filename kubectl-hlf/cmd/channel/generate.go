@@ -2,6 +2,10 @@ package channel
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
+	"strings"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-config/configtx/orderer"
 	"github.com/kfsoftware/hlf-operator/controllers/testutils"
@@ -10,9 +14,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"io"
-	"io/ioutil"
-	"strings"
 )
 
 type generateChannelCmd struct {
@@ -106,7 +107,11 @@ func (c generateChannelCmd) run() error {
 	var ordererOrgs []testutils.OrdererOrg
 	for mspID, orderers := range ordererMap {
 		orderer := orderers[0]
-		cahost := orderer.Spec.Secret.Enrollment.Component.Cahost
+		// cahost := orderer.Spec.Secret.Enrollment.Component.Cahost
+		// 这段从peer获取cahost的逻辑抄过来的, 神逻辑。。。只是让当Cahost是ip时, 让GetCertAuthByURL比较端口号获取正确的证书
+		// 不知道挂ingress时会不会有问题, 暂时先认为fabricorderernode和fabricpeer的crd下Secret.Enrollment.Component.Cahost都是挂ip
+		// 不然就算挂了ingress, 下面peer的逻辑也是一样的, 也会有问题
+		cahost := strings.Split(orderer.Spec.Secret.Enrollment.Component.Cahost, ".")[0]
 		certAuth, err := helpers.GetCertAuthByURL(
 			clientSet,
 			oclient,
